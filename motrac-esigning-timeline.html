@@ -1,0 +1,452 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Motrac MT — E-signing selectie</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@300;400;600&family=Barlow+Condensed:wght@600;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0a0a;
+      --surface: #1a1a1a;
+      --border: #2a2a2a;
+      --accent: #A00020;
+      --txt: #f4f4f4;
+      --muted: #b9b9b9;
+      --good: #2e8b57;
+      --warn: #d8901a;
+      --bad: #9e1f1f;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Barlow', sans-serif;
+      background: var(--bg);
+      color: var(--txt);
+      min-height: 100vh;
+      position: relative;
+      overflow-x: hidden;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: .12;
+      background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140' viewBox='0 0 140 140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.45'/%3E%3C/svg%3E");
+      z-index: 100;
+    }
+    h1,h2,h3,h4,.caps {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      margin: 0;
+    }
+    .container { max-width: 1320px; margin: 0 auto; padding: 24px; }
+    .header {
+      position: fixed; top: 0; left: 0; right: 0; height: 64px;
+      background: rgba(10,10,10,.97); border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between; z-index: 20;
+      padding: 0 24px;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .logo {
+      width: 28px; height: 28px; background: var(--accent);
+      clip-path: polygon(50% 0, 100% 38%, 81% 100%, 19% 100%, 0 38%);
+    }
+    .deadline-pill {
+      border: 1px solid var(--accent); color: #fff; background: rgba(160,0,32,.22);
+      border-radius: 999px; padding: 7px 12px; font-size: 13px; animation: blink 1.2s infinite;
+    }
+    @keyframes blink { 50% { opacity: .45; } }
+
+    .steps-nav {
+      position: fixed; top: 64px; left: 0; right: 0; height: 56px;
+      border-bottom: 1px solid var(--border); background: rgba(12,12,12,.98); z-index: 19;
+      display: flex; align-items: center; gap: 8px; padding: 8px 24px; overflow-x: auto;
+    }
+    .step-btn {
+      background: transparent; color: var(--txt); border: 1px solid var(--border);
+      border-radius: 999px; padding: 9px 14px; display: inline-flex; align-items: center; gap: 9px;
+      cursor: pointer; white-space: nowrap;
+    }
+    .step-btn .num {
+      width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--border);
+      display: grid; place-items: center; font-size: 13px;
+    }
+    .step-btn.active { border-color: var(--accent); box-shadow: inset 0 -2px 0 var(--accent); }
+    .step-btn.active .num { background: var(--accent); border-color: var(--accent); }
+    .step-btn.done .num { background: #1f5e3b; border-color: #2e8b57; }
+
+    main { padding-top: 136px; }
+    .section { display: none; }
+    .section.active { display: block; animation: fadeUp .45s ease; }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(16px);} to { opacity:1; transform: translateY(0);} }
+
+    .cards-4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 18px; }
+    .kpi {
+      border: 1px solid var(--border); background: var(--surface); border-radius: 14px; padding: 14px;
+    }
+    .kpi .val { font-size: 38px; color: var(--accent); font-family: 'Barlow Condensed'; font-weight: 800; }
+
+    .grid-3 { display:grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 14px; }
+    .card {
+      border: 1px solid var(--border); background: var(--surface); border-radius: 14px; padding: 16px; position: relative;
+    }
+    .ghost {
+      position: absolute; top: 8px; right: 10px; font-size: 58px; opacity: .12;
+      font-family: 'Barlow Condensed'; font-weight: 800;
+    }
+    .status {
+      display:inline-block; margin-top: 8px; border-radius: 999px; padding: 4px 10px; font-size: 12px;
+      border: 1px solid var(--border);
+    }
+    .done { background: rgba(46,139,87,.2); border-color: #2e8b57; }
+    .current { background: rgba(216,144,26,.2); border-color: #d8901a; }
+    .pending { background: rgba(255,255,255,.08); }
+
+    .tier { margin-bottom: 20px; }
+    .tier-head { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+    .badge { background: var(--accent); border-radius: 999px; padding: 2px 10px; font-size: 12px; }
+    .chips { display:flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+    .chip {
+      border: 1px solid var(--border); background: var(--surface); border-radius: 999px; padding: 7px 12px;
+      position: relative; font-size: 14px;
+    }
+    .chip .tag { background: var(--accent); border-radius: 999px; font-size: 10px; padding: 2px 7px; margin-left: 6px; }
+    .chip.ko { opacity: .48; text-decoration: line-through; }
+    .chip.ko .tag { background: #8a1a1a; }
+
+    .tabs, .filters { display:flex; flex-wrap: wrap; gap:8px; margin-bottom:12px; }
+    .tab-btn, .filter-btn {
+      border: 1px solid var(--border); background: var(--surface); color: #fff; padding: 8px 12px; border-radius: 10px; cursor: pointer;
+    }
+    .tab-btn.active, .filter-btn.active { border-color: var(--accent); color: #fff; }
+
+    .criteria-list { display:grid; gap:8px; }
+    .criterion {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+      padding: 10px 12px; display:flex; align-items:center; gap: 10px;
+    }
+    .criterion .cat { min-width: 100px; color: #fff; background: var(--accent); border-radius: 6px; padding: 3px 8px; font-size: 12px; }
+    .criterion .idx { margin-left:auto; opacity:.2; font-family:'Barlow Condensed'; font-size: 28px; }
+
+    .table-wrap { overflow-x: auto; border:1px solid var(--border); border-radius: 12px; }
+    table { border-collapse: collapse; width: max-content; min-width: 100%; font-size: 12px; background:#fff; color:#111; }
+    th, td { border: 1px solid #d9d9d9; padding: 6px 8px; text-align: center; white-space: nowrap; background:#fff; }
+    th { background: var(--accent); color:#fff; position: sticky; top: 0; z-index: 1; font-family: 'Barlow Condensed'; font-size: 13px; }
+    td.sticky, th.sticky { position: sticky; left: 0; z-index: 2; text-align: left; min-width: 165px; }
+    th.sticky { z-index: 3; }
+    tr.ko-row { opacity: .4; }
+    tr.note-row td { background: #fff3d8; color:#7a5200; font-style: italic; text-align: left; }
+    .yes { background:#cdeed7; }
+    .partial { background:#ffe3b1; }
+    .no { background:#f5bcbc; }
+    .score-good { background:#d4f1de; }
+    .score-mid { background:#ffe8b9; }
+    .score-low { background:#f9caca; }
+
+    .shortlist-grid { display:grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 14px; }
+    .rank-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px; position: relative; overflow: hidden; }
+    .rank-card.top { border-left: 4px solid var(--accent); border-top: 3px solid var(--accent); background: radial-gradient(circle at top right, rgba(160,0,32,.24), transparent 42%), var(--surface); }
+    .rank-card.dim { opacity: .45; }
+    .rank-badge { display:inline-block; background: var(--accent); border-radius: 999px; padding: 3px 10px; font-size: 11px; }
+    .bar {
+      height: 8px; border-radius: 999px; background: #2b2b2b; overflow:hidden; margin: 6px 0 10px;
+    }
+    .bar > span { display:block; width: 0; height: 100%; background: linear-gradient(90deg, var(--accent), #d1324f); transition: width 1s ease; }
+    .total { font-size: 44px; color: var(--accent); font-family: 'Barlow Condensed'; }
+    .watch { color:#ffca63; }
+
+    .hero { display:grid; grid-template-columns: 1.2fr .8fr; gap: 16px; margin-bottom: 16px; }
+    .cta-row { display:flex; gap:10px; margin-top: 14px; }
+    .btn {
+      border: 1px solid var(--accent); background: var(--accent); color:#fff; padding: 10px 14px; border-radius: 10px; cursor:pointer;
+    }
+    .btn.alt { background: transparent; }
+    .price-card { border:1px solid var(--border); border-top: 3px solid var(--accent); background: var(--surface); border-radius: 14px; padding: 16px; }
+    .big-price { font-size: 56px; font-family: 'Barlow Condensed'; color: var(--accent); }
+    .div { border-top: 1px solid var(--border); margin: 10px 0; }
+    .pills { display:flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .pill { border:1px solid var(--accent); background: rgba(160,0,32,.2); border-radius: 999px; font-size: 12px; padding: 4px 8px; }
+
+    @media (max-width: 900px) {
+      .cards-4 { grid-template-columns: repeat(2,1fr); }
+      .grid-3, .shortlist-grid { grid-template-columns: 1fr; }
+      .hero { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="brand">
+      <div class="logo"></div>
+      <div>
+        <h3>Motrac NL — E-signing Vendor Selectie</h3>
+        <small style="color:var(--muted)">MT dashboard</small>
+      </div>
+    </div>
+    <div class="deadline-pill">Offerte verloopt 31 mrt</div>
+  </header>
+
+  <nav class="steps-nav" id="stepNav"></nav>
+
+  <main>
+    <div class="container">
+      <section id="step-1" class="section active"></section>
+      <section id="step-2" class="section"></section>
+      <section id="step-3" class="section"></section>
+      <section id="step-4" class="section"></section>
+      <section id="step-5" class="section"></section>
+      <section id="step-6" class="section"></section>
+    </div>
+  </main>
+
+<script>
+const steps = [
+  'Selectieproces','Longlist','Eisen','Knock-out & Vergelijk','Shortlist Top 3','PandaDoc Offerte'
+];
+let currentStep = 1;
+let criteriaTab = 'must';
+let matrixTab = 'total';
+let matrixFilter = 'all';
+
+const criteria = {
+  must: [
+    ['Integratie','Native SF integratie (AppExchange)'],['Integratie','Upload CPQ docs op SF OPPTY/Case + signingvelden'],['Integratie','Document status terugschrijven naar SF'],
+    ['Software','API'],['Software','Webhooks'],['Software','Azure AD SSO'],['Software','eIDAS compliant'],['Software','Ondertekenen zonder account'],
+    ['Software','Ondertekenen op mobiel'],['Software','Eenvoudige interface SFO/ondertekenaar'],['Software','Integratie SharePoint+Outlook+Power Automate'],['Software','Interne countersign'],
+    ['Documentflow','Automatisch opslaan in SharePoint'],['Documentflow','Meerdere ondertekenaars'],['Documentflow','Ondertekenvolgorde instelbaar'],['Documentflow','Audit trail (timestamp/IP/documentversie/ondertekenaar)']
+  ],
+  should: [
+    ['Salesgebruik','SF documentoverzicht'],['Salesgebruik','Automatische reminders'],['Salesgebruik','Engagement analytics (wie opent, hoe lang)'],['Software','Portal branding'],
+    ['Software','Pay-as-you-go model'],['Software','Standaard signing workflows'],['Software','E-mail templates'],['Software','Status dashboard']
+  ],
+  could: [
+    ['Software','Deal rooms/portals'],['Software','CPQ functionaliteit'],['Software','MCP voor LLM-integratie'],['Document','Inline commentaar'],['Document','Documentgeneratie']
+  ]
+};
+
+const vendors = [
+  {name:'PandaDoc ★',tier:'T1',sl:true,confirmed:true,cost:'$11.700',must:[1,1,1,1,1,1,1,1,1,1,.5,1,.5,1,1,1],should:[1,1,1,1,1,1,1,1],could:[1,1,.5,1,1],note:'★ Bevestigde offerte — Enterprise incl. SF, onboarding en premium support.'},
+  {name:'GetAccept',tier:'T3',sl:true,cost:'$12K-$20K',must:[1,1,1,1,1,1,1,1,1,1,.5,1,.5,1,1,1],should:[1,1,1,1,.5,1,1,1],could:[1,.5,.5,1,1],note:'Sterkste engagement analytics. Native SF bidirectioneel.'},
+  {name:'SignNow',tier:'T2',sl:true,cost:'$9K-$14K',must:[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],should:[1,1,.5,1,.5,1,1,1],could:[.5,0,.5,.5,.5],note:'100% must-have score. Site License = PAYG-model.'},
+  {name:'DocuSign',tier:'T1',cost:'$16K-$26K',must:[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],should:[1,1,.5,1,0,1,1,1],could:[.5,1,.5,.5,1],note:'Geen PAYG. IAM add-on vereist voor SF. Duurste optie.'},
+  {name:'Dropbox Sign',tier:'T1',cost:'$12K-$18K',must:[1,1,1,1,1,1,.5,1,1,1,.5,1,.5,1,1,1],should:[1,1,.5,1,0,1,1,1],could:[0,0,.5,0,.5]},
+  {name:'Adobe Sign',tier:'T1',cost:'$15K-$22K',must:[1,1,1,1,1,1,1,1,1,.5,1,1,1,1,1,1],should:[1,1,.5,1,0,1,1,1],could:[0,.5,.5,.5,1],note:'Geen PAYG. SF alleen Enterprise. Overage $3,50/transactie.'},
+  {name:'Nitro Sign',tier:'T2',cost:'$8K-$13K',must:[.5,1,.5,1,1,1,1,1,1,1,1,1,1,1,1,1],should:[.5,1,.5,1,0,1,1,1],could:[0,0,.5,1,.5],note:'SF integratie is custom API — geen AppExchange package. Risico op must-have.'},
+  {name:'OneSpan',tier:'T1',cost:'n.b.',must:[1,1,1,1,1,1,1,1,1,.5,.5,1,.5,1,1,1],should:[1,1,.5,1,0,1,1,1],could:[0,0,.5,0,.5]},
+  {name:'Zoho Sign',tier:'T2',cost:'n.b.',must:[.5,1,.5,1,1,.5,1,1,1,1,.5,1,.5,1,1,1],should:[.5,1,.5,1,1,1,1,1],could:[0,.5,0,.5,.5]},
+  {name:'DocuSeal',tier:'T2',ko:true,cost:'n.b.',must:[0,1,0,1,1,.5,.5,1,1,1,.5,1,.5,1,1,1],should:[0,1,.5,1,1,1,1,1],could:[0,0,.5,.5,.5],note:'KO: geen native Salesforce-integratie.'},
+  {name:'Xodo Sign',tier:'T2',ko:true,cost:'n.b.',must:[0,1,0,1,.5,.5,.5,1,1,1,.5,1,.5,1,1,1],should:[0,1,.5,1,1,1,.5,1],could:[0,0,0,.5,0],note:'KO: geen native Salesforce-integratie.'},
+  {name:'Skribble',tier:'T3',ko:true,cost:'n.b.',must:[0,1,0,1,.5,1,1,1,1,1,.5,1,.5,1,1,1],should:[0,1,.5,1,1,1,1,1],could:[0,0,0,0,0],note:'KO: geen native Salesforce-integratie.'}
+];
+
+const shortTop = [
+  {rank:1,name:'PandaDoc',tier:'T1',cost:'$11.700/jr',cpd:'$1,50',must:91,should:100,could:80,total:88,note:'Enige vendor met bevestigde offerte. PAYG-model. 100% should-have score.',watch:'SP auto-save via Power Automate — beheerbaarheid toetsen in demo. Offerte verloopt 31/3/2026.',top:true},
+  {rank:2,name:'GetAccept',tier:'T3',cost:'$12K-$20K',cpd:'~$1,54',must:91,should:94,could:70,total:84,note:'Sterkste engagement analytics. Native SF. Deal rooms native.',watch:'Prijs is schatting — offerte opvragen. SP save via webhook.'},
+  {rank:3,name:'SignNow',tier:'T2',cost:'$9K-$14K',cpd:'~$1,15',must:100,should:88,could:40,total:79,note:'100% must-have score. Site License = PAYG. Sterk op M365/SharePoint.',watch:'Engagement analytics basis. Could-haves zwak.'},
+];
+const dropped = [
+  ['DocuSign','40–120% duurder zonder meerwaarde binnen scope. Geen PAYG.'],
+  ['Nitro Sign','SF custom API — niet AppExchange. Risico op must-have.'],
+  ['Dropbox Sign','eIDAS geen QES. Onvoldoende meerwaarde vs PandaDoc.']
+];
+
+function score(v){
+  const avg = arr => arr.reduce((a,b)=>a+b,0)/arr.length;
+  const m=avg(v.must), s=avg(v.should), c=avg(v.could);
+  const total = Math.round((m*0.55 + s*0.30 + c*0.15)*100);
+  return {m:Math.round(m*100),s:Math.round(s*100),c:Math.round(c*100),total};
+}
+
+function renderNav(){
+  const nav = document.getElementById('stepNav');
+  nav.innerHTML = steps.map((name,i)=>{
+    const n=i+1, active=n===currentStep, done=n<currentStep;
+    return `<button class="step-btn ${active?'active':''} ${done?'done':''}" onclick="goStep(${n})"><span class="num">${done?'✓':n}</span>${name}</button>`;
+  }).join('');
+}
+
+function renderStep1(){
+  document.getElementById('step-1').innerHTML = `
+    <h2>Step 1 — Selectieproces</h2>
+    <div class="cards-4" style="margin-top:12px">
+      <div class="kpi"><div class="val">19</div>leveranciers</div>
+      <div class="kpi"><div class="val">29</div>criteria</div>
+      <div class="kpi"><div class="val">3</div>knockout</div>
+      <div class="kpi"><div class="val">3</div>shortlist</div>
+    </div>
+    <div class="grid-3">
+      ${[
+        ['🔎','Marktscan','Longlist opstellen uit G2 crowd shortlist.', 'Afgerond','done'],
+        ['🧹','Knock-out toets','Native Salesforce integratie als absolute KO.', 'Afgerond','done'],
+        ['📋','Eisen bepalen','Must/Should/Could wegen en invullen met MT.', 'Huidige fase','current'],
+        ['📊','Vergelijkmatrix','Scoring en kosten naast elkaar zetten.', 'Te plannen','pending'],
+        ['🏁','Top-3 bepalen','Eindweging op functionaliteit, risico en prijs.', 'Te plannen','pending'],
+        ['💰','Offertefinale','Onderhandeling en besluitvorming op PandaDoc.', 'Te plannen','pending'],
+      ].map((c,idx)=>`<div class='card'><div class='ghost'>${idx+1}</div><h3>${c[0]} ${c[1]}</h3><p>${c[2]}</p><span class='status ${c[4]}'>${c[3]}</span></div>`).join('')}
+    </div>`;
+}
+
+function renderStep2(){
+  const tiers = [
+    ['T1','Enterprise leaders','Volwassen enterprise suites met brede dekking.','G2 Crowd',[
+      ['DocuSign','',''],['Adobe Sign','',''],['PandaDoc','SL ★','sl'],['Dropbox Sign','',''],['OneSpan Sign','','']
+    ]],
+    ['T2','Strong mid-market','Sterke alternatieven met beperkte enterprise diepgang.','G2 Crowd',[
+      ['SignNow','SL','sl'],['Zoho Sign','',''],['Foxit eSign','',''],['Xodo Sign','KO','ko'],['SignWell','',''],['DocuSeal','KO','ko'],['Jotform Sign','',''],['Nitro Sign','','']
+    ]],
+    ['T3','CLM/Sales-driven','Commerciële platforms met focus op dealflow en sales UX.','G2 Crowd',[
+      ['GetAccept','SL','sl'],['Qwilr','',''],['Proposify','',''],['DealHub','',''],['Contractbook','',''],['Skribble','KO','ko']
+    ]]
+  ];
+  document.getElementById('step-2').innerHTML = `<h2>Step 2 — Longlist</h2>${tiers.map(t=>`
+    <div class='tier card'><div class='tier-head'><span class='badge'>${t[0]}</span><h3>${t[1]}</h3></div><p>${t[2]} <small style='color:var(--muted)'>Bron: ${t[3]}</small></p>
+      <div class='chips'>${t[4].map(v=>`<div class='chip ${v[2]==='ko'?'ko':''}'>${v[0]} ${v[1]?`<span class='tag'>${v[1]}</span>`:''}</div>`).join('')}</div>
+    </div>`).join('')}`;
+}
+
+function renderStep3(){
+  const labels = {must:'Must-haves (16 criteria · 55%)',should:'Should-haves (8 criteria · 30%)',could:'Could-haves (5 criteria · 15%)'};
+  const list = criteria[criteriaTab];
+  document.getElementById('step-3').innerHTML = `
+    <h2>Step 3 — Eisen (Selectiecriteria)</h2>
+    <div class='tabs' style='margin-top:12px'>
+      ${Object.keys(labels).map(k=>`<button class='tab-btn ${criteriaTab===k?'active':''}' onclick="setCriteriaTab('${k}')">${labels[k]}</button>`).join('')}
+    </div>
+    <div class='criteria-list'>
+      ${list.map((c,i)=>`<div class='criterion'><span class='cat'>${c[0]}</span><span>${c[1]}</span><span class='idx'>${i+1}</span></div>`).join('')}
+    </div>`;
+}
+
+function renderMatrixRows(){
+  const sorted = [...vendors].sort((a,b)=>score(b).total-score(a).total);
+  return sorted.map(v=>{
+    if(matrixFilter==='sl' && !v.sl) return '';
+    if(matrixFilter==='hideko' && v.ko) return '';
+    const sc=score(v);
+    const sClass=sc.total>=90?'score-good':(sc.total>=75?'score-mid':'score-low');
+    const rowClass = `${v.ko?'ko-row':''}`;
+    const status = v.confirmed?'Bevestigd':(v.ko?'KO':(v.sl?'Shortlist':'Longlist'));
+    const metrics = [...v.must, ...v.should, ...v.could].map(n=>`<td class='${n===1?'yes':n===.5?'partial':'no'}'>${n===1?'✓':n===.5?'~':'✗'}</td>`).join('');
+    return `<tr class='${rowClass}' data-ko='${v.ko?1:0}'><td class='sticky' style='font-weight:600;${v.confirmed?'color:#2e8b57':''}'>${v.name}</td>${metrics}
+      <td>${sc.m}%</td><td>${sc.s}%</td><td>${sc.c}%</td><td class='${sClass}'><b>${sc.total}%</b></td><td>${v.cost||'n.b.'}</td><td>${status}</td></tr>
+      ${v.note?`<tr class='note-row ${rowClass}'><td class='sticky'>Notitie</td><td colspan='35'>${v.note}</td></tr>`:''}`;
+  }).join('');
+}
+
+function renderStep4(){
+  const mustL=['SF nat.','CPQ→SF','Stat→SF','API','Hooks','SSO','eIDAS','Geen acc.','Mobiel','UI','M365+SP','Counter','SP save','Multi','Volgorde','Audit'];
+  const shouldL=['SF overz.','Auto rem.','Engagement','Branding','PAYG','Sign.flows','Mail tmpl.','Status db.'];
+  const couldL=['Deal rooms','CPQ funct.','MCP/LLM','Inline comm.','Doc. gen.'];
+  document.getElementById('step-4').innerHTML = `
+    <h2>Step 4 — Knock-out & Vergelijk</h2>
+    <div class='tabs' style='margin-top:12px'>
+      ${[['must','Must'],['should','Should'],['could','Could'],['total','Totaalscore']].map(([k,v])=>`<button class='tab-btn ${matrixTab===k?'active':''}' onclick="setMatrixTab('${k}')">${v}</button>`).join('')}
+    </div>
+    <div class='filters'>
+      <button class='filter-btn ${matrixFilter==='all'?'active':''}' onclick="setMatrixFilter('all')">Alle vendors</button>
+      <button class='filter-btn ${matrixFilter==='sl'?'active':''}' onclick="setMatrixFilter('sl')">Alleen shortlist</button>
+      <button class='filter-btn ${matrixFilter==='hideko'?'active':''}' onclick="setMatrixFilter('hideko')">Verberg KO</button>
+    </div>
+    <div class='table-wrap'><table><thead><tr><th class='sticky'>Vendor</th>${mustL.map(s=>`<th>${s}</th>`).join('')}${shouldL.map(s=>`<th>${s}</th>`).join('')}${couldL.map(s=>`<th>${s}</th>`).join('')}
+      <th>Must 55%</th><th>Should 30%</th><th>Could 15%</th><th>Totaalscore</th><th>Kosten/jaar</th><th>Status</th></tr></thead><tbody>${renderMatrixRows()}</tbody></table></div>
+  `;
+  validateKORowsHidden();
+}
+
+function renderStep5(){
+  document.getElementById('step-5').innerHTML = `
+    <h2>Step 5 — Shortlist Top 3</h2>
+    <div class='shortlist-grid' style='margin-top:12px'>
+      ${shortTop.map(v=>`<div class='rank-card ${v.top?'top':''}'>
+        <div class='ghost'>#${v.rank}</div><span class='rank-badge'>#${v.rank}</span>
+        <h3 style='margin-top:8px'>${v.name}</h3><small>${v.tier} · ${v.cost}</small>
+        <div style='margin-top:8px'>Must ${v.must}%<div class='bar'><span data-target='${v.must}'></span></div>
+        Should ${v.should}%<div class='bar'><span data-target='${v.should}'></span></div>
+        Could ${v.could}%<div class='bar'><span data-target='${v.could}'></span></div></div>
+        <div class='total'>${v.total}%</div>
+        <div><b>Kosten per document:</b> ${v.cpd}</div><p>${v.note}</p><p class='watch'>⚠ ${v.watch}</p>
+      </div>`).join('')}
+      ${dropped.map(d=>`<div class='rank-card dim'><h3>${d[0]}</h3><p>${d[1]}</p></div>`).join('')}
+    </div>
+  `;
+}
+
+function renderStep6(){
+  document.getElementById('step-6').innerHTML = `
+    <h2>Step 6 — PandaDoc Offerte</h2>
+    <div class='hero' style='margin-top:12px'>
+      <div class='card'>
+        <h2>Beoogde keuze: PandaDoc Enterprise</h2>
+        <p class='caps' style='color:var(--muted);margin-top:6px'>Snelste route naar schaalbare, compliant e-signing op Salesforce</p>
+        <div class='deadline-pill' style='display:inline-block;margin-top:10px'>Deadline: offerte geldig t/m 31 maart 2026</div>
+        <div class='cta-row'>
+          <button class='btn' onclick="alert('CTA: Besluitvoorstel delen')">Besluitvoorstel MT</button>
+          <button class='btn alt' onclick="alert('CTA: Demo-sessie plannen')">Plan demo & validatie</button>
+        </div>
+      </div>
+      <div class='price-card'>
+        <small>Jaarlijkse abonnementskosten</small>
+        <div class='big-price'>$11.700/jr</div><div class='div'></div>
+        <div>7.800 documenten</div><div class='div'></div>
+        <div><b>$1,50 per document</b> (na 50% volumekorting)</div>
+        <div class='pills'><span class='pill'>Salesforce incl.</span><span class='pill'>Premium support</span><span class='pill'>Onboarding incl.</span><span class='pill'>eIDAS</span></div>
+      </div>
+    </div>
+    <div class='grid-3'>
+      ${[
+        ['🔗','Salesforce Enterprise','Native integratie inclusief statussync en templates.'],
+        ['✍️','Unlimited e-signatures','Volumeproof model voor 7.800+ documenten/jr.'],
+        ['📈','Engagement analytics','Inzicht in openen, lezen en drop-off momenten.'],
+        ['📁','Deal rooms','Portals voor commerciële documentuitwisseling.'],
+        ['🛡️','eIDAS + audit trail','Compliant met volledige auditlog en bewijsvoering.'],
+        ['🚀','Premium onboarding','Implementatieversnelling met dedicated support.'],
+      ].map(f=>`<div class='card'><h3>${f[0]} ${f[1]}</h3><p>${f[2]}</p></div>`).join('')}
+    </div>
+    <div class='table-wrap' style='margin-top:14px'>
+      <table style='min-width:100%'><thead><tr><th>Leverancier</th><th>Jaarkosten</th><th>Per document</th><th>Prijsmodel</th><th>vs PandaDoc</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr style='background:#d4f1de'><td><b>PandaDoc</b></td><td>$11.700</td><td>$1,50</td><td>PAYG + volume discount</td><td style='color:#2e8b57'><b>Baseline</b></td><td>Bevestigd</td></tr>
+        <tr><td>SignNow</td><td>$9K-$14K</td><td>~$1,15</td><td>Site license</td><td style='color:#2e8b57'>tot -$2.700</td><td>Alternatief</td></tr>
+        <tr><td>Nitro Sign</td><td>$8K-$13K</td><td>n.b.</td><td>License</td><td style='color:#2e8b57'>tot -$3.700</td><td>Afgevallen</td></tr>
+        <tr><td>GetAccept</td><td>$12K-$20K</td><td>~$1,54</td><td>Quote-based</td><td style='color:#9e1f1f'>+$300 tot +$8.300</td><td>Top 3</td></tr>
+        <tr><td>Dropbox Sign</td><td>$12K-$18K</td><td>n.b.</td><td>License</td><td style='color:#9e1f1f'>+$300 tot +$6.300</td><td>Afgevallen</td></tr>
+        <tr><td>DocuSign</td><td>$16K-$26K</td><td>n.b.</td><td>Enterprise + add-ons</td><td style='color:#9e1f1f'>+$4.300 tot +$14.300</td><td>Afgevallen</td></tr>
+      </tbody></table>
+    </div>
+  `;
+}
+
+function goStep(n){
+  currentStep = n;
+  renderAll();
+  if (n===5) {
+    setTimeout(()=>document.querySelectorAll('#step-5 .bar span').forEach(el=>el.style.width = el.dataset.target + '%'),300);
+  }
+}
+function setCriteriaTab(t){ criteriaTab=t; renderStep3(); }
+function setMatrixTab(t){ matrixTab=t; renderStep4(); }
+function setMatrixFilter(f){ matrixFilter=f; renderStep4(); }
+
+function validateKORowsHidden(){
+  if(matrixFilter!=='hideko') return;
+  const koRows = Array.from(document.querySelectorAll('#step-4 tbody tr[data-ko="1"]'));
+  const visible = koRows.filter(r=>r.offsetParent !== null);
+  console.assert(visible.length===0,'KO rows should be hidden when filter active');
+}
+
+function renderAll(){
+  renderNav();
+  document.querySelectorAll('.section').forEach((s,idx)=>s.classList.toggle('active', idx+1===currentStep));
+  renderStep1(); renderStep2(); renderStep3(); renderStep4(); renderStep5(); renderStep6();
+}
+
+renderAll();
+</script>
+</body>
+</html>
